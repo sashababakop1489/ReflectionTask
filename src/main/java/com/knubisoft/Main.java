@@ -1,11 +1,7 @@
 package com.knubisoft;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.SneakyThrows;
-
-import java.io.File;
 import java.lang.reflect.Field;
-import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -17,9 +13,14 @@ import java.util.function.Supplier;
 public class Main {
     static Map<Class<?>, Supplier<Object>> generator = new LinkedHashMap<>();
     static {
-        generator.put(Integer.class, () -> 1);
-        generator.put(Boolean.class, () -> true);
-        generator.put(String.class, () -> "Hello");
+        Random random = new Random();
+        generator.put(Integer.class, () -> random.nextInt(100));
+        generator.put(Boolean.class, random::nextBoolean);
+        generator.put(String.class, () -> UUID.randomUUID().toString());
+        generator.put(Long.class, random::nextLong);
+        generator.put(Float.class, random::nextFloat);
+        generator.put(Double.class, random::nextDouble);
+        generator.put(Character.class,() -> random.nextInt(65535));
     }
 
     public static void main(String[] args) {
@@ -29,7 +30,7 @@ public class Main {
         List<List<Integer>> list = new ArrayList<>();
         Map<String, Integer> map = new HashMap<>();
         X x = new X();
-        System.out.println(populate(unpackGenericClass(new GenericClass<>(map) {}.getType())));
+        System.out.println(populate(unpackGenericClass(new GenericClass<>(x) {}.getType())));
 
     }
 
@@ -38,6 +39,7 @@ public class Main {
         if (type instanceof ParameterizedType) {
             Type[] types = ((ParameterizedType) type).getActualTypeArguments();
             for (Type t : types) {
+                t.getClass().newInstance();
                   populate(t);
             }
             return true;
@@ -48,6 +50,8 @@ public class Main {
         } else {
             Field[] fields = Class.forName(((Class<?>) type).getTypeName()).getDeclaredFields();
             for (Field field : fields) {
+                field.setAccessible(true);
+                field.set(type.getClass(), field);
                 populate(field.getGenericType());
             }
         }

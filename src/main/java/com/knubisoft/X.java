@@ -10,5 +10,4 @@ public class X {
     private String name;
     private List<Integer> list;
     private Boolean flag;
-
 }
