@@ -30,7 +30,7 @@ public class Main {
         List<List<Integer>> list = new ArrayList<>();
         Map<String, Integer> map = new HashMap<>();
         X x = new X();
-        System.out.println(populate(unpackGenericClass(new GenericClass<>(x) {}.getType())));
+        System.out.println(populate(unpackGenericClass(new GenericClass<>(list) {}.getType())));
 
     }
 
@@ -38,46 +38,7 @@ public class Main {
     private static Object populate(Type type) {
         if (type instanceof ParameterizedType parameterizedType) {
             Type incomeRawType = parameterizedType.getRawType();
-
-            if ((List.class.isAssignableFrom((Class<?>) incomeRawType))){
-                Type[] types = parameterizedType.getActualTypeArguments();
-                List<Object> resultList = new ArrayList<>();
-                for (int i = 0; i < 5; i++) {
-                    resultList.add(populate(types[0]));
-                }
-                return resultList;
-            }
-
-            if (Map.class.isAssignableFrom((Class<?>) incomeRawType)) {
-                Map<Object, Object> resultMap = new LinkedHashMap();
-                Type[] nestedMapTypes = parameterizedType.getActualTypeArguments();
-                for (int i = 0; i < 5; i++) {
-                    resultMap.put(populate(nestedMapTypes[0]), populate(nestedMapTypes[1]));
-                }
-                return resultMap;
-            }
-
-            if (Set.class.isAssignableFrom((Class<?>) incomeRawType)){
-                Type[] types = parameterizedType.getActualTypeArguments();
-                Set<Object> resultSet = new HashSet<>();
-                for (int i = 0; i < 5; i++) {
-                    resultSet.add(populate(types[0]));
-                }
-                return resultSet;
-            }
-            if (Queue.class.isAssignableFrom((Class<?>) incomeRawType)){
-                Type[] types = parameterizedType.getActualTypeArguments();
-                Queue<Object> resultQueue = new PriorityQueue<>();
-                for (int i = 0; i < 5; i++) {
-                    resultQueue.add(populate(types[0]));
-                }
-                return resultQueue;
-            }
-            Type[] types = ((ParameterizedType) type).getActualTypeArguments();
-            for (Type t : types) {
-                  populate(t);
-            }
-            return true;
+           return generateInstanceOfCollection(incomeRawType, parameterizedType);
         }
 
         if (isSimpleType(type)) {
@@ -93,6 +54,44 @@ public class Main {
             }
             return instance.toString();
         }
+    }
+
+    private static Object generateInstanceOfCollection(Type incomeRawType, ParameterizedType parameterizedType){
+        if ((List.class.isAssignableFrom((Class<?>) incomeRawType))){
+            Type[] types = parameterizedType.getActualTypeArguments();
+            List<Object> resultList = new ArrayList<>();
+            for (int i = 0; i < 5; i++) {
+                resultList.add(populate(types[0]));
+            }
+            return resultList;
+        }
+
+        if (Map.class.isAssignableFrom((Class<?>) incomeRawType)) {
+            Map<Object, Object> resultMap = new LinkedHashMap();
+            Type[] nestedMapTypes = parameterizedType.getActualTypeArguments();
+            for (int i = 0; i < 5; i++) {
+                resultMap.put(populate(nestedMapTypes[0]), populate(nestedMapTypes[1]));
+            }
+            return resultMap;
+        }
+
+        if (Set.class.isAssignableFrom((Class<?>) incomeRawType)){
+            Type[] types = parameterizedType.getActualTypeArguments();
+            Set<Object> resultSet = new HashSet<>();
+            for (int i = 0; i < 5; i++) {
+                resultSet.add(populate(types[0]));
+            }
+            return resultSet;
+        }
+        if (Queue.class.isAssignableFrom((Class<?>) incomeRawType)){
+            Type[] types = parameterizedType.getActualTypeArguments();
+            Queue<Object> resultQueue = new PriorityQueue<>();
+            for (int i = 0; i < 5; i++) {
+                resultQueue.add(populate(types[0]));
+            }
+            return resultQueue;
+        }
+        return null;
     }
 
     private static Type unpackGenericClass(Type type) {
