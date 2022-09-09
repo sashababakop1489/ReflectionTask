@@ -36,26 +36,63 @@ public class Main {
 
     @SneakyThrows
     private static Object populate(Type type) {
-        if (type instanceof ParameterizedType) {
+        if (type instanceof ParameterizedType parameterizedType) {
+            Type incomeRawType = parameterizedType.getRawType();
+
+            if ((List.class.isAssignableFrom((Class<?>) incomeRawType))){
+                Type[] types = parameterizedType.getActualTypeArguments();
+                List<Object> resultList = new ArrayList<>();
+                for (int i = 0; i < 5; i++) {
+                    resultList.add(populate(types[0]));
+                }
+                return resultList;
+            }
+
+            if (Map.class.isAssignableFrom((Class<?>) incomeRawType)) {
+                Map<Object, Object> resultMap = new LinkedHashMap();
+                Type[] nestedMapTypes = parameterizedType.getActualTypeArguments();
+                for (int i = 0; i < 5; i++) {
+                    resultMap.put(populate(nestedMapTypes[0]), populate(nestedMapTypes[1]));
+                }
+                return resultMap;
+            }
+
+            if (Set.class.isAssignableFrom((Class<?>) incomeRawType)){
+                Type[] types = parameterizedType.getActualTypeArguments();
+                Set<Object> resultSet = new HashSet<>();
+                for (int i = 0; i < 5; i++) {
+                    resultSet.add(populate(types[0]));
+                }
+                return resultSet;
+            }
+            if (Queue.class.isAssignableFrom((Class<?>) incomeRawType)){
+                Type[] types = parameterizedType.getActualTypeArguments();
+                Queue<Object> resultQueue = new PriorityQueue<>();
+                for (int i = 0; i < 5; i++) {
+                    resultQueue.add(populate(types[0]));
+                }
+                return resultQueue;
+            }
             Type[] types = ((ParameterizedType) type).getActualTypeArguments();
             for (Type t : types) {
-                t.getClass().newInstance();
                   populate(t);
             }
             return true;
         }
+
         if (isSimpleType(type)) {
-            System.out.println(generator.get(type).get());
             return generator.get(type).get();
-        } else {
-            Field[] fields = Class.forName(((Class<?>) type).getTypeName()).getDeclaredFields();
+        }
+        else {
+            Class<?> cls = Class.forName(((Class<?>) type).getTypeName());
+            Field[] fields = cls.getDeclaredFields();
+            Object instance = cls.getDeclaredConstructor().newInstance();
             for (Field field : fields) {
                 field.setAccessible(true);
-                field.set(type.getClass(), field);
-                populate(field.getGenericType());
+                field.set(instance, populate(field.getGenericType()));
             }
+            return instance.toString();
         }
-        return true;
     }
 
     private static Type unpackGenericClass(Type type) {
